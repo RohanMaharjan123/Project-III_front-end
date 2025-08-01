@@ -1,7 +1,7 @@
 "use client"
 
 import { MarketTrends } from "@/components/analytics/market-trends"
-import { MarketOverview } from "@/components/analytics/market-overview"
+
 import { SectorAnalysis } from "@/components/analytics/sector-analysis"
 import { TechnicalIndicators } from "@/components/dashboard/technical-indicators"
 

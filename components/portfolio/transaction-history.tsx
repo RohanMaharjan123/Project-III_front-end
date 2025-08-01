@@ -7,89 +7,67 @@ import { Input } from "@/components/ui/input"
 import { Plus, Search, Download } from "lucide-react"
 import { useState } from "react"
 
-interface Transaction {
-  id: string
-  date: string
-  type: "BUY" | "SELL"
-  symbol: string
-  name: string
-  quantity: number
-  price: number
-  totalAmount: number
-  fees: number
-  netAmount: number
-}
-
-const transactions: Transaction[] = [
-  {
-    id: "TXN001",
-    date: "2024-12-15",
-    type: "BUY",
-    symbol: "NABIL",
-    name: "Nabil Bank Limited",
-    quantity: 25,
-    price: 1200,
-    totalAmount: 30000,
-    fees: 150,
-    netAmount: 30150,
-  },
-  {
-    id: "TXN002",
-    date: "2024-12-10",
-    type: "SELL",
-    symbol: "SHL",
-    name: "Shivam Cements Ltd",
-    quantity: 50,
-    price: 440,
-    totalAmount: 22000,
-    fees: 110,
-    netAmount: 21890,
-  },
-  {
-    id: "TXN003",
-    date: "2024-12-05",
-    type: "BUY",
-    symbol: "UPPER",
-    name: "Upper Tamakoshi Hydropower",
-    quantity: 25,
-    price: 780,
-    totalAmount: 19500,
-    fees: 97.5,
-    netAmount: 19597.5,
-  },
-  {
-    id: "TXN004",
-    date: "2024-11-28",
-    type: "BUY",
-    symbol: "LICN",
-    name: "Life Insurance Nepal",
-    quantity: 30,
-    price: 920,
-    totalAmount: 27600,
-    fees: 138,
-    netAmount: 27738,
-  },
-]
+import type { Transaction } from "@/types/portfolio"
+import { TransactionFormModal } from "./transaction-form-modal"
+import { TransactionFormValues } from "@/lib/validators/transaction-validator"
+import { Pencil, Trash2 } from "lucide-react"
 
 interface TransactionHistoryProps {
-  portfolioId: string
-  onAddTransaction: () => void
+  transactions: Transaction[];
+  portfolioId: number; // Add portfolioId prop
+  onAddTransaction: (data: TransactionFormValues) => void;
+  onEditTransaction: (data: TransactionFormValues, transactionId: number) => void;
+  onDeleteTransaction: (transactionId: number) => void;
 }
 
-export function TransactionHistory({ portfolioId, onAddTransaction }: TransactionHistoryProps) {
+export function TransactionHistory({ transactions = [], portfolioId, onAddTransaction, onEditTransaction, onDeleteTransaction }: TransactionHistoryProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("ALL")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState<TransactionFormValues & { id?: number } | undefined>(undefined)
+
+  const handleAddClick = () => {
+    setEditingTransaction(undefined)
+    setIsModalOpen(true)
+  }
+
+  const handleEditClick = (transaction: Transaction) => {
+    setEditingTransaction({
+      id: transaction.id,
+      portfolio: portfolioId,
+      stock_symbol: transaction.stock_details.symbol,
+      transaction_type: transaction.transaction_type.toLowerCase() as "buy" | "sell",
+      quantity: transaction.quantity,
+      price: transaction.price,
+      transaction_date: transaction.transaction_date,
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleFormSubmit = (data: TransactionFormValues, transactionId?: number) => {
+    if (transactionId) {
+      onEditTransaction(data, transactionId)
+    } else {
+      onAddTransaction(data)
+    }
+    setIsModalOpen(false)
+  }
+
+  const handleDeleteClick = (transactionId: number) => {
+    onDeleteTransaction(transactionId)
+  }
+
 
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
-      transaction.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesFilter = filterType === "ALL" || transaction.type === filterType
+      transaction.stock_details.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.stock_details.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesFilter = filterType === "ALL" || transaction.transaction_type.toUpperCase() === filterType
     return matchesSearch && matchesFilter
   })
 
   const getTypeColor = (type: string) => {
-    return type === "BUY" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+    return type.toUpperCase() === "BUY" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
   }
 
   return (
@@ -102,7 +80,7 @@ export function TransactionHistory({ portfolioId, onAddTransaction }: Transactio
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
-            <Button onClick={onAddTransaction} className="bg-green-600 hover:bg-green-700">
+            <Button onClick={handleAddClick} className="bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Transaction
             </Button>
@@ -153,13 +131,13 @@ export function TransactionHistory({ portfolioId, onAddTransaction }: Transactio
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge className={getTypeColor(transaction.type)} variant="secondary">
-                      {transaction.type}
+                    <Badge className={getTypeColor(transaction.transaction_type)} variant="secondary">
+                      {transaction.transaction_type.toUpperCase()}
                     </Badge>
-                    <span className="text-sm text-gray-500">{transaction.date}</span>
+                    <span className="text-sm text-gray-500">{transaction.transaction_date}</span>
                   </div>
-                  <h3 className="font-semibold text-gray-900">{transaction.symbol}</h3>
-                  <p className="text-sm text-gray-600">{transaction.name}</p>
+                  <h3 className="font-semibold text-gray-900">{transaction.stock_details.symbol}</h3>
+                  <p className="text-sm text-gray-600">{transaction.stock_details.name}</p>
                 </div>
               </div>
 
@@ -174,12 +152,20 @@ export function TransactionHistory({ portfolioId, onAddTransaction }: Transactio
                 </div>
                 <div>
                   <p className="text-gray-600">Total Amount</p>
-                  <p className="font-semibold">Rs. {transaction.totalAmount.toLocaleString()}</p>
+                  <p className="font-semibold">Rs. {transaction.total_cost.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-gray-600">Net Amount</p>
-                  <p className="font-semibold">Rs. {transaction.netAmount.toLocaleString()}</p>
+                  <p className="font-semibold">Rs. {transaction.total_cost.toLocaleString()}</p>
                 </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" size="sm" onClick={() => handleEditClick(transaction)}>
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDeleteClick(transaction.id)}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           ))}
@@ -198,28 +184,39 @@ export function TransactionHistory({ portfolioId, onAddTransaction }: Transactio
                 <th className="text-right py-3 px-4 font-medium text-gray-600">Total Amount</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-600">Fees</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-600">Net Amount</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-600">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredTransactions.map((transaction) => (
                 <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4 text-gray-900">{transaction.date}</td>
+                  <td className="py-4 px-4 text-gray-900">{transaction.transaction_date}</td>
                   <td className="py-4 px-4">
-                    <Badge className={getTypeColor(transaction.type)} variant="secondary">
-                      {transaction.type}
+                    <Badge className={getTypeColor(transaction.transaction_type)} variant="secondary">
+                      {transaction.transaction_type.toUpperCase()}
                     </Badge>
                   </td>
                   <td className="py-4 px-4">
                     <div>
-                      <p className="font-semibold text-gray-900">{transaction.symbol}</p>
-                      <p className="text-sm text-gray-600">{transaction.name}</p>
+                      <p className="font-semibold text-gray-900">{transaction.stock_details.symbol}</p>
+                      <p className="text-sm text-gray-600">{transaction.stock_details.name}</p>
                     </div>
                   </td>
                   <td className="py-4 px-4 text-right font-medium">{transaction.quantity}</td>
                   <td className="py-4 px-4 text-right">Rs. {transaction.price.toLocaleString()}</td>
-                  <td className="py-4 px-4 text-right">Rs. {transaction.totalAmount.toLocaleString()}</td>
+                  <td className="py-4 px-4 text-right">Rs. {transaction.total_cost.toLocaleString()}</td>
                   <td className="py-4 px-4 text-right">Rs. {transaction.fees.toLocaleString()}</td>
-                  <td className="py-4 px-4 text-right font-semibold">Rs. {transaction.netAmount.toLocaleString()}</td>
+                  <td className="py-4 px-4 text-right font-semibold">Rs. {transaction.net_amount.toLocaleString()}</td>
+                  <td className="py-4 px-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditClick(transaction)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDeleteClick(transaction.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -232,6 +229,14 @@ export function TransactionHistory({ portfolioId, onAddTransaction }: Transactio
           </div>
         )}
       </CardContent>
+
+      <TransactionFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleFormSubmit}
+        portfolioId={portfolioId}
+        initialData={editingTransaction}
+      />
     </Card>
   )
 }

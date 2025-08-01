@@ -111,12 +111,11 @@ const watchlistStocks: WatchlistStock[] = [
 ]
 
 interface WatchlistTableProps {
-    watchlistId: string
     viewMode: "grid" | "table"
     onAddStock: () => void
 }
 
-export function WatchlistTable({ watchlistId, viewMode, onAddStock }: WatchlistTableProps) {
+export function WatchlistTable({ viewMode, onAddStock }: WatchlistTableProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [sortBy, setSortBy] = useState("symbol")
 

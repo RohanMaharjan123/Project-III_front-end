@@ -3,11 +3,8 @@
 import type * as React from "react"
 import {
     BarChart3,
-    Bell,
-    BookOpen,
     Home,
     MessageSquare,
-    Newspaper,
     PieChart,
     Settings,
     Star,
@@ -95,25 +92,25 @@ const data = {
                 // },
             ],
         },
-        // {
-        //     title: "Market Data",
-        //     url: "#",
-        //     icon: TrendingUp,
-        //     items: [
-        //         {
-        //             title: "Live Prices",
-        //             url: "/dashboard/live-prices",
-        //         },
-        //         {
-        //             title: "Market Summary",
-        //             url: "/dashboard/market-summary",
-        //         },
-        //         {
-        //             title: "Sector Analysis",
-        //             url: "/dashboard/sectors",
-        //         },
-        //     ],
-        // },
+        {
+            title: "Market Data",
+            url: "#",
+            icon: TrendingUp,
+            items: [
+                {
+                    title: "EOD",
+                    url: "/dashboard/eod",
+                },
+                {
+                    title: "Market Summary",
+                    url: "/dashboard/market-summary",
+                },
+                {
+                    title: "Sector Analysis",
+                    url: "/dashboard/sectors",
+                },
+            ],
+        },
         // {
         //     title: "News & Insights",
         //     url: "/dashboard/news",

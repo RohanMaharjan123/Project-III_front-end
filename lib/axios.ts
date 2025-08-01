@@ -6,10 +6,15 @@ const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
-api.interceptors.request.use((config) => {
-    const token = Cookies.get('access_token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use((config) => {    
+    const isAuthPath = config.url?.endsWith('/auth/login/') || config.url?.endsWith('/auth/register/');
+
+    // Only attach the token for non-authentication requests
+    if (!isAuthPath) {
+        const token = Cookies.get('access_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
     }
     return config;
 });
