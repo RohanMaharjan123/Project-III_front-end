@@ -64,7 +64,7 @@ export function MarketOverview() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{marketStats.totalTurnover}</div>
-                            <p className="text-xs text-muted-foreground">Today's trading volume</p>
+                            <p className="text-xs text-muted-foreground">Today&apos;s trading volume</p>
                         </CardContent>
                     </Card>
 

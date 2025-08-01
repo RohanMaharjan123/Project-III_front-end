@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, EyeOff, Mail, Lock, User, Shield } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -63,8 +62,9 @@ export function SignupForm() {
     try {
       await register(formData.fullName, formData.email, formData.password, formData.role)
       router.push('/dashboard')
-    } catch (err: any) {
-      const errorData = err.response?.data;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { [key: string]: string | string[] } } };
+      const errorData = error.response?.data;
       let errorMessage = 'Registration failed. Please try again.';
       if (errorData) {
         if (typeof errorData === 'object' && !Array.isArray(errorData)) {

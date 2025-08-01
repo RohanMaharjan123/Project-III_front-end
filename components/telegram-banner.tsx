@@ -25,9 +25,15 @@ export function TelegramBanner() {
             </div>
           </div>
           <div className="text-right">
-            <Button className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-full font-semibold">
-              click to join
-            </Button>
+            <a
+              href="https://t.me/+p1RXtjULpREwN2Jl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-full font-semibold">
+                click to join
+              </Button>
+            </a>
             <p className="text-sm text-gray-700 mt-2">
               receive all the latest updates
               <br />

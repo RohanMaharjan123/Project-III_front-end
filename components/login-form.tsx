@@ -25,15 +25,20 @@ export function LoginForm() {
     try {
       await login(email, password, rememberMe)
       router.push("/dashboard")
-    } catch (err: any) {
-      const errorData = err.response?.data;
-      let errorMessage = 'Invalid email or password. Please try again.';
-      if (errorData && errorData.error) {
-        errorMessage = errorData.error;
-      } else if (errorData && errorData.detail) {
-        errorMessage = errorData.detail;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { [key: string]: string | string[] } } };
+      const errorData = error.response?.data;
+      let errorMessage = 'Login failed. Please check your credentials and try again.';
+      if (errorData) {
+        if (typeof errorData === 'object' && !Array.isArray(errorData) && errorData !== null) {
+          // Handle DRF validation errors which are often in a dict, e.g., { email: ["..."] } or { detail: "..." }
+          const messages = Object.values(errorData).flat();
+          if (messages.length > 0) {
+            errorMessage = messages.join(' ');
+          }
+        }
       }
-
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false)
